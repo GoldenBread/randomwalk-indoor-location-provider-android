@@ -1,7 +1,6 @@
 package io.indoorlocation.manual;
 
 import android.location.Location;
-import android.os.Handler;
 import android.util.Log;
 
 import com.mapbox.services.commons.models.Position;
@@ -25,10 +24,6 @@ public class RandomWalkIndoorLocationProvider extends IndoorLocationProvider {
 
     private Position lastPosition;
 
-    private Handler refreshHandler;
-    private Runnable refreshRunnable;
-
-
 
     public RandomWalkIndoorLocationProvider() {
         super();
@@ -36,14 +31,6 @@ public class RandomWalkIndoorLocationProvider extends IndoorLocationProvider {
         rIndoorLocation = new IndoorLocation("Manual", EURATECH_LATITUDE, EURATECH_LONGITUDE, Double.NaN, System.currentTimeMillis());
 
         lastPosition = Position.fromCoordinates(EURATECH_LONGITUDE, EURATECH_LATITUDE);
-
-        refreshRunnable = new Runnable() {
-            @Override
-            public void run() {
-                refreshRandom();
-                refreshHandler.postDelayed(this, TIME_BW_UPDATES);
-            }
-        };
     }
 
     private void setIndoorLocation(double latitude, double longitude) {
@@ -79,10 +66,18 @@ public class RandomWalkIndoorLocationProvider extends IndoorLocationProvider {
 
         isStarted = true;
 
-        if (refreshHandler == null) {
-            refreshHandler = new Handler();
-            refreshHandler.postDelayed(refreshRunnable, TIME_BW_UPDATES);
-        }
+        new Thread(new Runnable() {
+            public void run() {
+                while (isStarted && !Thread.currentThread().isInterrupted()) {
+                    refreshRandom();
+                    try {
+                        Thread.sleep(TIME_BW_UPDATES);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
     }
 
     @Override
