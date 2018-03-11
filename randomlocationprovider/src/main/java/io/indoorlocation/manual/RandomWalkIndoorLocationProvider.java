@@ -1,12 +1,10 @@
 package io.indoorlocation.manual;
 
 import android.location.Location;
+import android.os.Handler;
 import android.util.Log;
 
 import com.mapbox.services.commons.models.Position;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 import io.indoorlocation.core.IndoorLocation;
 import io.indoorlocation.core.IndoorLocationProvider;
@@ -27,10 +25,8 @@ public class RandomWalkIndoorLocationProvider extends IndoorLocationProvider {
 
     private Position lastPosition;
 
-    private final Object lock = new Object();
-
-    private Timer refreshTimer;
-    private TimerTask refreshTimerTask;
+    private Handler refreshHandler;
+    private Runnable refreshRunnable;
 
 
 
@@ -41,12 +37,11 @@ public class RandomWalkIndoorLocationProvider extends IndoorLocationProvider {
 
         lastPosition = Position.fromCoordinates(EURATECH_LONGITUDE, EURATECH_LATITUDE);
 
-        refreshTimerTask = new TimerTask() {
+        refreshRunnable = new Runnable() {
             @Override
             public void run() {
-                synchronized (lock) { //to avoid deadlock on fields & dispatchIndoorLocation <= not working
-                    refreshRandom();
-                }
+                refreshRandom();
+                refreshHandler.postDelayed(this, TIME_BW_UPDATES);
             }
         };
     }
@@ -84,9 +79,9 @@ public class RandomWalkIndoorLocationProvider extends IndoorLocationProvider {
 
         isStarted = true;
 
-        if (refreshTimer == null) {
-            refreshTimer = new Timer();
-            refreshTimer.scheduleAtFixedRate(refreshTimerTask, 0, TIME_BW_UPDATES);
+        if (refreshHandler == null) {
+            refreshHandler = new Handler();
+            refreshHandler.postDelayed(refreshRunnable, TIME_BW_UPDATES);
         }
     }
 
