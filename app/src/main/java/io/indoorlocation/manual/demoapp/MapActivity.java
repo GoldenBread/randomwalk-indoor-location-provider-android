@@ -39,7 +39,7 @@ public class MapActivity extends AppCompatActivity {
     }
 
     private void setupLocationProvider() {
-        randomWalkIndoorLocationProvider = new RandomWalkIndoorLocationProvider();
+        randomWalkIndoorLocationProvider = new RandomWalkIndoorLocationProvider(this);
         mapwizePlugin.setLocationProvider(randomWalkIndoorLocationProvider);
     }
 

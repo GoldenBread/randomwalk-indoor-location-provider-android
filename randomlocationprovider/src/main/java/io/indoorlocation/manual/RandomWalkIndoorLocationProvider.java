@@ -1,5 +1,6 @@
 package io.indoorlocation.manual;
 
+import android.app.Activity;
 import android.location.Location;
 import android.util.Log;
 
@@ -24,13 +25,17 @@ public class RandomWalkIndoorLocationProvider extends IndoorLocationProvider {
 
     private Position lastPosition;
 
+    private Activity    mapActivity;
 
-    public RandomWalkIndoorLocationProvider() {
+
+    public RandomWalkIndoorLocationProvider(Activity mapActivity) {//retrieve the layout activity to run the dispatcher on the same thread
         super();
 
         rIndoorLocation = new IndoorLocation("Manual", EURATECH_LATITUDE, EURATECH_LONGITUDE, Double.NaN, System.currentTimeMillis());
 
         lastPosition = Position.fromCoordinates(EURATECH_LONGITUDE, EURATECH_LATITUDE);
+
+        this.mapActivity = mapActivity;
     }
 
     private void setIndoorLocation(double latitude, double longitude) {
@@ -40,7 +45,12 @@ public class RandomWalkIndoorLocationProvider extends IndoorLocationProvider {
 
         rIndoorLocation = new IndoorLocation(loc, null);
 
-        dispatchIndoorLocationChange(rIndoorLocation);
+        mapActivity.runOnUiThread(new Runnable() {// avoid deadlock and other conflicts
+            public void run()
+            {
+                dispatchIndoorLocationChange(rIndoorLocation);
+            }
+        });
     }
 
     private void refreshRandom() {
